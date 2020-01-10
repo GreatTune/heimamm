@@ -19,15 +19,15 @@
         label-width="43px"
         class="demo-ruleForm login-from"
       >
-        <el-form-item class="input-from" label="" prop="username">
-          <el-input v-model="ruleForm.username"></el-input>
+        <el-form-item class="input-from" label prop="phone">
+          <el-input v-model="ruleForm.phone"></el-input>
         </el-form-item>
-        <el-form-item class="input-from" label="" prop="password">
+        <el-form-item class="input-from" label prop="password">
           <el-input v-model="ruleForm.password"></el-input>
         </el-form-item>
         <el-row>
           <el-col :span="18">
-            <el-form-item label="" prop="password">
+            <el-form-item label prop="code">
               <el-input v-model="ruleForm.code"></el-input>
             </el-form-item>
           </el-col>
@@ -40,8 +40,7 @@
         <template>
           <el-checkbox class="login-checked" v-model="checked">
             我已阅读并同意
-            <el-link type="primary">用户协议</el-link>
-            和
+            <el-link type="primary">用户协议</el-link>和
             <el-link type="primary">隐私条款</el-link>
           </el-checkbox>
         </template>
@@ -58,18 +57,43 @@
 </template>
 
 <script>
+// 手机号码判断
+var validatePhone = (rule, value, callback) => {
+  if (value === "") {
+  // 如果输入内容为空 , 则提示用户
+    callback(new Error("手机号码不能为空"));
+  }else {
+    // 判断手机号码是否正确
+    const reg = /^(0|86|17951)?(13[0-9]|15[012356789]|17[678]|18[0-9]|14[57])[0-9]{8}$/;
+    if (reg.test(value) == true) {
+      callback();
+    } else {
+      // 如果不正确 , 则提示
+      callback(new Error("手机号码不正确 , 请重新输入!"));
+    }
+    callback();
+  }
+};
 export default {
   data() {
     return {
       ruleForm: {
-        username: "",
+        phone: "",
         password: "",
         code: ""
       },
       rules: {
-        name: [
-          { required: true, message: "手机号不能为空", triggre: "blur" },
+        phone: [
+          { validator: validatePhone, triggre: "blur" },
           { min: 11, max: 11, message: "手机号长度为11位数", trigger: "blur" }
+        ],
+        password: [
+          { required: true, message: "密码不能为空", triggre: "change" },
+          { min: 6, max: 16, message: "密码长度为6~16位数", triggre: "change" }
+        ],
+        code: [
+          { required: true, message: "验证码不能为空", trigger: "blur" },
+          { min: 4, max: 4, message: "验证码长度为4位数", trigger: "change" }
         ]
       }
     };
@@ -129,19 +153,22 @@ export default {
     .login-from {
       margin-top: 27px;
       margin-right: 41px;
+      // 验证码 css样式
       .code-img {
         height: 40px;
         img {
           height: 100%;
         }
       }
+      // 勾选框
       .login-checked {
         padding-left: 44px;
         margin-bottom: 28px;
       }
+      // 登录注册按钮
       .login-btn {
         width: 100%;
-        margin-left: 0
+        margin-left: 0;
       }
       .from-btn {
         margin-top: 26px;
