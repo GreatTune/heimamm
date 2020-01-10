@@ -36,7 +36,7 @@
           </el-col>
           <el-col :span="6">
             <div class="code-img">
-              <img :src="codeUrl" alt />
+              <img @click="codeImg" :src="codeUrl" alt />
             </div>
           </el-col>
         </el-row>
@@ -111,6 +111,10 @@ export default {
   },
   // 方法的集合
   methods: {
+    // 验证码点击事件
+    codeImg(){
+      this.codeUrl = `${process.env.VUE_APP_BASEURL}/captcha?type=login&t=${Date.now()}`
+    },
     // 登录按钮点击事件
     submitForm(formName) {
       // 判断用户是否已经勾选用户协议
