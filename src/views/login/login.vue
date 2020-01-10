@@ -19,12 +19,15 @@
         label-width="43px"
         class="demo-ruleForm login-from"
       >
+        <!-- 手机号输入框 -->
         <el-form-item class="input-from" label prop="phone">
           <el-input v-model="ruleForm.phone"></el-input>
         </el-form-item>
+        <!-- 密码输入框 -->
         <el-form-item class="input-from" label prop="password">
-          <el-input v-model="ruleForm.password"></el-input>
+          <el-input show-password v-model="ruleForm.password"></el-input>
         </el-form-item>
+        <!-- 验证码输入框 -->
         <el-row>
           <el-col :span="18">
             <el-form-item label prop="code">
@@ -33,19 +36,21 @@
           </el-col>
           <el-col :span="6">
             <div class="code-img">
-              <img src="../../assets/01.png" alt />
+              <img :src="codeUrl" alt />
             </div>
           </el-col>
         </el-row>
+        <!-- 用户协议 -->
         <template>
-          <el-checkbox class="login-checked" v-model="checked">
+          <el-checkbox class="login-checked" v-model="ruleForm.checked">
             我已阅读并同意
             <el-link type="primary">用户协议</el-link>和
             <el-link type="primary">隐私条款</el-link>
           </el-checkbox>
         </template>
+        <!-- 登录注册按钮 -->
         <el-form-item>
-          <el-button class="login-btn" type="primary">登录</el-button>
+          <el-button class="login-btn" type="primary" @click="submitForm('ruleForm')">登录</el-button>
           <el-button class="login-btn from-btn" type="primary">注册</el-button>
         </el-form-item>
       </el-form>
@@ -57,12 +62,14 @@
 </template>
 
 <script>
+// 导入 抽取好的 api 文件
+import {login} from '../../api/login.js'
 // 手机号码判断
 var validatePhone = (rule, value, callback) => {
   if (value === "") {
-  // 如果输入内容为空 , 则提示用户
+    // 如果输入内容为空 , 则提示用户
     callback(new Error("手机号码不能为空"));
-  }else {
+  } else {
     // 判断手机号码是否正确
     const reg = /^(0|86|17951)?(13[0-9]|15[012356789]|17[678]|18[0-9]|14[57])[0-9]{8}$/;
     if (reg.test(value) == true) {
@@ -77,15 +84,19 @@ var validatePhone = (rule, value, callback) => {
 export default {
   data() {
     return {
+      // 登录验证码生成
+      codeUrl: process.env.VUE_APP_BASEURL + "/captcha?type=login",
+      // 表单
       ruleForm: {
         phone: "",
         password: "",
-        code: ""
+        code: "",
+        checked: false
       },
+      // 表单自定义校验规则
       rules: {
         phone: [
           { validator: validatePhone, triggre: "blur" },
-          { min: 11, max: 11, message: "手机号长度为11位数", trigger: "blur" }
         ],
         password: [
           { required: true, message: "密码不能为空", triggre: "change" },
@@ -97,6 +108,41 @@ export default {
         ]
       }
     };
+  },
+  // 方法的集合
+  methods: {
+    // 登录按钮点击事件
+    submitForm(formName) {
+      // 判断用户是否已经勾选用户协议
+      if(this.ruleForm.checked==false) {
+        // 如果没有勾选, 则提示用户勾选之后再进行下一步,否则后面不再执行
+        this.$message.warning('请勾选用户协议之后再操作下一步!');
+        return;
+      }
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          // this.$message.success("登录成功")
+          login({
+            phone: this.ruleForm.phone,
+            password: this.ruleForm.password,
+            code: this.ruleForm.code,
+          }).then(res=>{
+            window.console.log(res)
+            if(res.data.code === 200) {
+              // 如果返回的是 200 状态码,就提示用户登录成功
+              this.$message.success("登录成功")
+              // 同时跳转到首页
+              this.$router.push("/index")
+            }else if(res.data.code === 202) {
+              // 如果返回的是 202 状态码 , 也提示用户
+              this.$message.error(res.data.message);
+            }
+          })
+        } else {
+          return false;
+        }
+      });
+    }
   }
 };
 </script>
@@ -157,6 +203,7 @@ export default {
       .code-img {
         height: 40px;
         img {
+          width: 100%;
           height: 100%;
         }
       }
